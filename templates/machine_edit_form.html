@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Edit Machine</h1>
+<form method="post">
+  <div class="form-row">
+    <label>Model</label>
+    <input type="text" name="model" value="{{ machine.model or '' }}" placeholder="Enter model">
+  </div>
+  <div class="form-row">
+    <label>Serial Number</label>
+    <input type="text" name="serial_number" value="{{ machine.serial_number or '' }}" placeholder="Enter serial number">
+  </div>
+  <div class="form-row">
+    <label>Reported Fault</label>
+    <textarea name="reported_fault" placeholder="Describe the reported fault">{{ machine.reported_fault or '' }}</textarea>
+  </div>
+  <div class="form-row">
+    <label>Service Notes</label>
+    <textarea name="service_notes" placeholder="Add service notes">{{ machine.service_notes or '' }}</textarea>
+  </div>
+  <div class="form-row">
+    <label>Status</label>
+    <select name="status">
+      <option value="">-- Select --</option>
+      <option value="Fixed" {% if machine.status == 'Fixed' %}selected{% endif %}>Fixed</option>
+      <option value="Waiting for Parts" {% if machine.status == 'Waiting for Parts' %}selected{% endif %}>Waiting for Parts</option>
+    </select>
+  </div>
+  <p>
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="{{ url_for('job_detail', job_id=machine.job_id) }}" class="btn btn-secondary">Cancel</a>
+  </p>
+</form>
+{% endblock %}
+

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+  <h1>Customers</h1>
+  <form method="GET" action="{{ url_for('list_customers') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+    <input type="text" name="search" value="{{ search_query or '' }}" placeholder="Search customers..." style="padding: 0.5rem 1rem; border-radius: 8px; border: 2px solid #e2e8f0; font-size: 0.9rem; min-width: 250px;">
+    <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1rem;">Search</button>
+    {% if search_query %}
+      <a href="{{ url_for('list_customers') }}" class="btn" style="padding: 0.5rem 1rem;">Clear</a>
+    {% endif %}
+  </form>
+</div>
+
+{% if customers %}
+<table>
+  <thead>
+    <tr>
+      <th>Customer Name</th>
+      <th>Location</th>
+      <th>Contact Name</th>
+      <th>Contact Phone</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for customer in customers %}
+    <tr>
+      <td><strong>{{ customer.customer_name }}</strong></td>
+      <td>{{ customer.location or '<span style="color: #a0aec0;">—</span>'|safe }}</td>
+      <td>{{ customer.contact_name or '<span style="color: #a0aec0;">—</span>'|safe }}</td>
+      <td>{{ customer.contact_phone or '<span style="color: #a0aec0;">—</span>'|safe }}</td>
+      <td>
+        <a class="btn btn-small btn-primary" href="{{ url_for('customer_jobs', customer_name=customer.customer_name) }}">View Jobs →</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+  {% if search_query %}
+    <p style="font-size: 1.1rem; margin-bottom: 1rem;">No customers found matching "{{ search_query }}".</p>
+    <a href="{{ url_for('list_customers') }}" class="btn">Clear Search</a>
+  {% else %}
+    <p style="font-size: 1.1rem; margin-bottom: 1rem;">No customers yet.</p>
+    <a href="{{ url_for('new_job') }}" class="btn btn-primary">Create Your First Job</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <h1>Jobs for Machine: {{ machine_info.model or 'Unknown' }} - {{ serial_number }}</h1>
+  <a href="{{ url_for('search_machines') }}" class="btn btn-secondary">← Back to Search</a>
+</div>
+
+{% if jobs %}
+  <table>
+    <thead>
+      <tr>
+        <th>Job #</th>
+        <th>Company</th>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Fault Description</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for job in jobs %}
+      <tr>
+        <td><strong>{{ job.job_number or job.id }}</strong></td>
+        <td><strong>{{ job.customer_name }}</strong></td>
+        <td>{{ job.job_date|aus_date if job.job_date else '—' }}</td>
+        <td>
+          {% if job.job_type %}
+            {% if job.job_type|lower == 'repair' %}
+              <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">
+                {{ job.job_type }}
+              </span>
+            {% elif job.job_type|lower == 'service' %}
+              <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">
+                {{ job.job_type }}
+              </span>
+            {% else %}
+              <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #e2e8f0; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">
+                {{ job.job_type }}
+              </span>
+            {% endif %}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if job.status %}
+            {% set status_colors = {'Open': '#1c4283', 'In Progress': '#8bb3df', 'Completed': '#8bb3df', 'Invoiced': '#223a87'} %}
+            {% set bg_color = status_colors.get(job.status, '#cbd5e0') %}
+            <span style="display: inline-block; padding: 0.25rem 0.75rem; background: {{ bg_color }}20; color: {{ bg_color }}; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">
+              {{ job.status }}
+            </span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if job.reported_fault %}
+            <div style="max-width: 300px; font-size: 0.75rem; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-wrap: break-word;">
+              {{ job.reported_fault }}
+            </div>
+          {% else %}
+            <span style="color: #a0aec0;">—</span>
+          {% endif %}
+        </td>
+        <td><a class="btn btn-small btn-primary" href="{{ url_for('job_detail', job_id=job.id) }}">View →</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="empty-state">
+    <p>No jobs found for this machine.</p>
+  </div>
+{% endif %}
+{% endblock %}
+

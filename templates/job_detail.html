@@ -1,0 +1,747 @@
+
+{% extends "base.html" %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+  <div>
+    <h1 style="margin: 0; margin-bottom: 0.5rem;">
+      <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+        <span>Job #</span>
+        <span style="color: #1c4283; font-weight: 600;">
+          {{ job.job_number or job.id }}
+        </span>
+      </div>
+      <div style="font-size: 1.2rem; font-weight: 500; color: #4a5568;">
+        {{ job.customer_name }}
+      </div>
+    </h1>
+  </div>
+  <div style="display: flex; gap: 0.5rem;">
+    <a href="{{ url_for('export_job', job_id=job.id) }}" class="btn btn-primary">📄 Print/Export</a>
+    <a href="{{ url_for('list_jobs') }}" class="btn btn-secondary">← Back to Jobs</a>
+  </div>
+</div>
+
+<div class="info-section">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+    <div>
+      <strong>Type:</strong><br>
+      <div id="job-type-container">
+        <span id="job-type-display" style="color: #4a5568;">
+          {% if job.job_type %}
+            {% if job.job_type|lower == 'repair' %}
+              <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #fee2e2; color: #991b1b; border-radius: 12px; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 500;">
+                {{ job.job_type }}
+              </span>
+            {% elif job.job_type|lower == 'service' %}
+              <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #dbeafe; color: #1e40af; border-radius: 12px; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 500;">
+                {{ job.job_type }}
+              </span>
+            {% else %}
+              <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #e2e8f0; border-radius: 12px; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 500;">
+                {{ job.job_type }}
+              </span>
+            {% endif %}
+          {% else %}
+            —
+          {% endif %}
+        </span>
+        <button onclick="editField('type')" class="btn btn-small" style="margin-top: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">Edit</button>
+      </div>
+      <form id="job-type-form" method="POST" action="{{ url_for('update_job_field', job_id=job.id) }}" style="display: none;">
+        <input type="hidden" name="field" value="type">
+        <select name="value" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 2px solid #e2e8f0; margin-top: 0.25rem;">
+          <option value="">-- Select --</option>
+          <option value="Service" {% if job.job_type == 'Service' %}selected{% endif %}>Service</option>
+          <option value="Repair" {% if job.job_type == 'Repair' %}selected{% endif %}>Repair</option>
+        </select>
+        <div style="margin-top: 0.25rem;">
+          <button type="submit" class="btn btn-small btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Save</button>
+          <button type="button" onclick="cancelEdit('type')" class="btn btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Cancel</button>
+        </div>
+      </form>
+    </div>
+    <div>
+      <strong>Date:</strong><br>
+      <div id="job-date-container">
+        <span id="job-date-display" style="color: #4a5568;">{{ job.job_date|aus_date if job.job_date else '—' }}</span>
+        <button onclick="editField('date')" class="btn btn-small" style="margin-top: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">Edit</button>
+      </div>
+      <form id="job-date-form" method="POST" action="{{ url_for('update_job_field', job_id=job.id) }}" style="display: none;">
+        <input type="hidden" name="field" value="date">
+        <input type="date" name="value" value="{{ job.job_date or '' }}" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 2px solid #e2e8f0; margin-top: 0.25rem;">
+        <div style="margin-top: 0.25rem;">
+          <button type="submit" class="btn btn-small btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Save</button>
+          <button type="button" onclick="cancelEdit('date')" class="btn btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Cancel</button>
+        </div>
+      </form>
+    </div>
+    <div>
+      <strong>Status:</strong><br>
+      <div id="job-status-container">
+        <span id="job-status-display" style="color: #4a5568;">
+          {% if job.status %}
+            {% set status_colors = {'Open': '#1c4283', 'In Progress': '#8bb3df', 'Completed': '#8bb3df', 'Invoiced': '#223a87'} %}
+            {% set bg_color = status_colors.get(job.status, '#cbd5e0') %}
+            <span style="display: inline-block; padding: 0.25rem 0.75rem; background: {{ bg_color }}20; color: {{ bg_color }}; border-radius: 12px; font-size: 0.85rem; font-weight: 500; margin-top: 0.25rem;">
+              {{ job.status }}
+            </span>
+          {% else %}
+            —
+          {% endif %}
+        </span>
+        <button onclick="editField('status')" class="btn btn-small" style="margin-top: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">Edit</button>
+      </div>
+      <form id="job-status-form" method="POST" action="{{ url_for('update_job_field', job_id=job.id) }}" style="display: none;">
+        <input type="hidden" name="field" value="status">
+        <select name="value" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 2px solid #e2e8f0; margin-top: 0.25rem;">
+          <option value="Completed" {% if job.status == 'Completed' %}selected{% endif %}>Completed</option>
+          <option value="In Progress" {% if job.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+          <option value="Open" {% if job.status == 'Open' %}selected{% endif %}>Open</option>
+        </select>
+        <div style="margin-top: 0.25rem;">
+          <button type="submit" class="btn btn-small btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Save</button>
+          <button type="button" onclick="cancelEdit('status')" class="btn btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Cancel</button>
+        </div>
+      </form>
+    </div>
+    <div>
+      <strong>Location:</strong><br>
+      <div id="job-location-container">
+        <span id="job-location-display" style="color: #4a5568;">{{ job.location or '—' }}</span>
+        <button onclick="editField('location')" class="btn btn-small" style="margin-top: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">Edit</button>
+      </div>
+      <form id="job-location-form" method="POST" action="{{ url_for('update_job_field', job_id=job.id) }}" style="display: none;">
+        <input type="hidden" name="field" value="location">
+        <input type="text" name="value" value="{{ job.location or '' }}" style="width: 100%; padding: 0.5rem; border-radius: 8px; border: 2px solid #e2e8f0; margin-top: 0.25rem;">
+        <div style="margin-top: 0.25rem;">
+          <button type="submit" class="btn btn-small btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Save</button>
+          <button type="button" onclick="cancelEdit('location')" class="btn btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Cancel</button>
+        </div>
+      </form>
+    </div>
+    <div>
+      <strong>Travel:</strong><br>
+      <div id="job-travel-container">
+        {% if travel_under_25 %}
+          <span id="job-travel-display" style="color: #4a5568;">Under 25km</span>
+        {% elif travel_time_hours and travel_time_hours > 0 %}
+          <span id="job-travel-display" style="color: #4a5568;">Travel Hours: {{ travel_time_hours }} hrs</span>
+        {% else %}
+          <span id="job-travel-display" style="color: #4a5568;">
+            {% if job.travel_cost is not none and job.travel_cost != '' %}
+              {{ job.travel_cost }}
+            {% else %}
+              Calculate Later
+            {% endif %}
+          </span>
+        {% endif %}
+        <button onclick="editTravel()" class="btn btn-small" style="margin-top: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">Edit</button>
+      </div>
+      <form id="job-travel-form" method="POST" action="{{ url_for('update_travel', job_id=job.id) }}" style="display: none;">
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+            <input type="radio" name="travel_type" value="under_25km" {% if travel_under_25 %}checked{% endif %} onchange="toggleTravelEditInput()">
+            Under 25km
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+            <input type="radio" name="travel_type" value="hours" {% if travel_time_hours and travel_time_hours > 0 %}checked{% endif %} onchange="toggleTravelEditInput()">
+            Input Hours Travelled
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+            <input type="radio" name="travel_type" value="calculated_later" {% if not travel_under_25 and (not travel_time_hours or travel_time_hours == 0) %}checked{% endif %} onchange="toggleTravelEditInput()">
+            Calculate Later
+          </label>
+        </div>
+        <input type="number" step="0.5" min="0" name="travel_time_hours" id="edit-travel-hours" placeholder="0.0" value="{% if travel_time_hours and travel_time_hours > 0 %}{{ travel_time_hours }}{% else %}0{% endif %}" style="display: {% if travel_time_hours and travel_time_hours > 0 %}block{% else %}none{% endif %}; width: 100%; padding: 0.5rem; border-radius: 8px; border: 2px solid #e2e8f0; margin-top: 0.25rem; font-size: 0.9rem;">
+        <input type="text" name="travel_cost" id="edit-travel-cost" placeholder="Enter travel cost or details" value="{% if job.travel_cost is not none %}{{ job.travel_cost }}{% endif %}" style="display: {% if not travel_under_25 and (not travel_time_hours or travel_time_hours == 0) %}block{% else %}none{% endif %}; width: 100%; padding: 0.5rem; border-radius: 8px; border: 2px solid #e2e8f0; margin-top: 0.25rem; font-size: 0.9rem;">
+        <div style="margin-top: 0.25rem;">
+          <button type="submit" class="btn btn-small btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Save</button>
+          <button type="button" onclick="cancelEditTravel()" class="btn btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function editField(field) {
+  const container = document.getElementById('job-' + field + '-container');
+  const form = document.getElementById('job-' + field + '-form');
+  
+  if (container && form) {
+    container.style.display = 'none';
+    form.style.display = 'inline-block';
+  }
+}
+
+function cancelEdit(field) {
+  const container = document.getElementById('job-' + field + '-container');
+  const form = document.getElementById('job-' + field + '-form');
+  
+  if (container && form) {
+    container.style.display = 'inline-block';
+    form.style.display = 'none';
+  }
+}
+
+function editTravel() {
+  const container = document.getElementById('job-travel-container');
+  const form = document.getElementById('job-travel-form');
+  
+  if (container && form) {
+    container.style.display = 'none';
+    form.style.display = 'block';
+    toggleTravelEditInput();
+  }
+}
+
+function cancelEditTravel() {
+  const container = document.getElementById('job-travel-container');
+  const form = document.getElementById('job-travel-form');
+  
+  if (container && form) {
+    container.style.display = 'inline-block';
+    form.style.display = 'none';
+  }
+}
+
+function toggleTravelEditInput() {
+  const under25 = document.querySelector('#job-travel-form input[name="travel_type"][value="under_25km"]');
+  const hours = document.querySelector('#job-travel-form input[name="travel_type"][value="hours"]');
+  const calculatedLater = document.querySelector('#job-travel-form input[name="travel_type"][value="calculated_later"]');
+  const travelHoursInput = document.getElementById('edit-travel-hours');
+  const travelCostInput = document.getElementById('edit-travel-cost');
+  
+  if (under25 && under25.checked) {
+    if (travelHoursInput) travelHoursInput.style.display = 'none';
+    if (travelCostInput) travelCostInput.style.display = 'none';
+  } else if (hours && hours.checked) {
+    if (travelHoursInput) travelHoursInput.style.display = 'block';
+    if (travelCostInput) travelCostInput.style.display = 'none';
+  } else if (calculatedLater && calculatedLater.checked) {
+    if (travelHoursInput) travelHoursInput.style.display = 'none';
+    if (travelCostInput) travelCostInput.style.display = 'block';
+  }
+}
+</script>
+
+<div class="info-section" style="margin-top: 1rem;">
+  <strong>Description:</strong><br>
+  <div id="job-description-container">
+    <div id="job-description-display" style="margin-top: 0.5rem; color: #4a5568; line-height: 1.6;">
+      {% if job.description %}
+        <p style="margin: 0; white-space: pre-wrap;">{{ job.description }}</p>
+      {% else %}
+        <span style="color: #a0aec0;">—</span>
+      {% endif %}
+    </div>
+    <button onclick="editField('description')" class="btn btn-small" style="margin-top: 0.75rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">Edit</button>
+  </div>
+  <form id="job-description-form" method="POST" action="{{ url_for('update_job_field', job_id=job.id) }}" style="display: none;">
+    <input type="hidden" name="field" value="description">
+    <textarea name="value" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 2px solid #e2e8f0; margin-top: 0.5rem; min-height: 100px; font-family: inherit; resize: vertical;">{{ job.description or '' }}</textarea>
+    <div style="margin-top: 0.5rem;">
+      <button type="submit" class="btn btn-small btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Save</button>
+      <button type="button" onclick="cancelEdit('description')" class="btn btn-small" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">Cancel</button>
+    </div>
+  </form>
+</div>
+
+{% if job.notes %}
+<div class="info-section" style="margin-top: 1rem;">
+  <strong>Notes:</strong><br>
+  <p style="margin-top: 0.5rem; white-space: pre-wrap;">{{ job.notes }}</p>
+</div>
+{% endif %}
+
+<div class="section-card">
+  <h2>👥 Contacts</h2>
+  {% if contacts %}
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for c in contacts %}
+      <tr>
+        <td><strong>{{ c.name or '—' }}</strong></td>
+        <td>{{ c.phone or '—' }}</td>
+        <td>{{ c.email or '—' }}</td>
+        <td>
+          {% if c.role %}
+            <span style="display: inline-block; padding: 0.25rem 0.75rem; background: #e2e8f0; border-radius: 12px; font-size: 0.8rem;">
+              {{ c.role }}
+            </span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          <a class="btn btn-small btn-primary" href="{{ url_for('edit_contact', contact_id=c.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('delete_contact', contact_id=c.id) }}" style="display:inline;" onsubmit="return confirm('Delete this contact?');">
+            <button type="submit" class="btn btn-small" style="background: #f56565; color: white; border: none;">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state" style="padding: 1rem;">No contacts yet.</p>
+  {% endif %}
+
+  <div class="collapsible-header" onclick="toggleCollapsible('contact-form')">
+    <h3>➕ Add Contact</h3>
+    <span class="collapsible-toggle">▼</span>
+  </div>
+  <div class="collapsible-content" id="contact-form">
+    <form method="post" action="{{ url_for('add_contact', job_id=job.id) }}">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Name</label>
+          <input type="text" name="name" placeholder="Enter name">
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Phone</label>
+          <input type="text" name="phone" placeholder="Enter phone">
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Email</label>
+          <input type="text" name="email" placeholder="Enter email">
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Role</label>
+          <input type="text" name="role" placeholder="Enter role">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">➕ Add Contact</button>
+    </form>
+  </div>
+</div>
+
+<div class="section-card">
+  <h2>⚙️ Machines</h2>
+  {% if machines %}
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Serial</th>
+        <th>Reported Fault</th>
+        <th>Service Notes</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for m in machines %}
+      <tr>
+        <td>
+          <div style="max-width: 150px; word-wrap: break-word; overflow-wrap: break-word;">{{ m.model or '—' }}</div>
+        </td>
+        <td><code style="background: #f7fafc; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem; word-break: break-all;">{{ m.serial_number or '—' }}</code></td>
+        <td>
+          {% if m.reported_fault %}
+            <div style="max-width: 200px; font-size: 0.85rem; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word;">{{ m.reported_fault }}</div>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if m.service_notes %}
+            <div style="max-width: 200px; font-size: 0.85rem; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word;">{{ m.service_notes }}</div>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if m.status %}
+            {% set status_colors = {'Fixed': '#8bb3df', 'Waiting for Parts': '#d97706'} %}
+            {% set bg_color = status_colors.get(m.status, '#cbd5e0') %}
+            <span style="display: inline-block; padding: 0.25rem 0.75rem; background: {{ bg_color }}20; color: {{ bg_color }}; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">
+              {{ m.status }}
+            </span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          <a class="btn btn-small btn-primary" href="{{ url_for('edit_machine', job_machine_id=m.job_machine_id) }}">Edit</a>
+          <form method="post" action="{{ url_for('delete_machine', job_machine_id=m.job_machine_id) }}" style="display:inline;" onsubmit="return confirm('Remove this machine from this job?');">
+            <button type="submit" class="btn btn-small" style="background: #f56565; color: white; border: none;">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state" style="padding: 1rem;">No machines yet.</p>
+  {% endif %}
+
+  <div class="collapsible-header" onclick="toggleCollapsible('machine-form')">
+    <h3>➕ Add Machine</h3>
+    <span class="collapsible-toggle">▼</span>
+  </div>
+  <div class="collapsible-content" id="machine-form">
+    <form method="post" action="{{ url_for('add_machine', job_id=job.id) }}" id="add-machine-form" autocomplete="off">
+      <div class="form-row" style="margin-bottom: 1rem;">
+        <label>Select Existing Machine (optional)</label>
+        <select name="machine_id" id="machine-select" autocomplete="off" style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 2px solid #e2e8f0;">
+          <option value="">-- Select from existing machines --</option>
+          {% for m in customer_machines %}
+            <option value="{{ m.id }}">
+              {{ m.serial_number or 'No Serial' }}{% if m.model %} - {{ m.model }}{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Model</label>
+          <input type="text" name="model" id="machine-model" autocomplete="off" placeholder="Enter model" value="">
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Serial Number</label>
+          <input type="text" name="serial_number" id="machine-serial" autocomplete="off" placeholder="Enter serial number" value="">
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Status</label>
+          <select name="status" id="machine-status" autocomplete="off">
+            <option value="">-- Select --</option>
+            <option value="Fixed" selected>Fixed</option>
+            <option value="Waiting for Parts">Waiting for Parts</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Reported Fault</label>
+        <textarea name="reported_fault" id="machine-fault" autocomplete="off" placeholder="Describe the reported fault"></textarea>
+      </div>
+      <div class="form-row">
+        <label>Service Notes</label>
+        <textarea name="service_notes" id="machine-notes" autocomplete="off" placeholder="Add service notes"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" id="add-machine-btn">➕ Add Machine</button>
+    </form>
+  </div>
+</div>
+
+<div class="section-card">
+  <h2>🔧 Parts Used</h2>
+  {% if parts %}
+  <table>
+    <thead>
+      <tr>
+        <th>Machine</th>
+        <th>Part #</th>
+        <th>Description</th>
+        <th>Head</th>
+        <th>Qty</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for p in parts %}
+      <tr>
+        <td style="border-bottom: none;">
+          {% if p.machine_id %}
+            {% set ns = namespace(displayed=false) %}
+            {% for m in customer_machines %}
+              {% if m.id == p.machine_id and not ns.displayed %}
+                {% set ns.displayed = true %}
+                <div style="max-width: 200px; word-wrap: break-word; overflow-wrap: break-word; font-size: 0.85rem; border: none; text-decoration: none;">
+                  {{ m.model or 'Machine' }}{% if m.serial_number %} ({{ m.serial_number }}){% endif %}
+                </div>
+              {% endif %}
+            {% endfor %}
+            {% if not ns.displayed %}
+              —
+            {% endif %}
+          {% elif p.machine_serial %}
+            <div style="max-width: 200px; word-wrap: break-word; overflow-wrap: break-word; font-size: 0.85rem; border: none; text-decoration: none;">{{ p.machine_serial }}</div>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td><strong>{{ p.part_number or '—' }}</strong></td>
+        <td>
+          {% if p.description %}
+            <div style="max-width: 250px; font-size: 0.85rem; line-height: 1.4; word-wrap: break-word; overflow-wrap: break-word;">
+              {{ p.description }}
+            </div>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ p.head or '—' }}</td>
+        <td>{{ p.quantity|int if p.quantity else '—' }}</td>
+        <td>
+          <a class="btn btn-small btn-primary" href="{{ url_for('edit_part', part_id=p.id) }}">Edit</a>
+          <form method="post" action="{{ url_for('delete_part', part_id=p.id) }}" style="display:inline;" onsubmit="return confirm('Delete this part?');">
+            <button type="submit" class="btn btn-small" style="background: #f56565; color: white; border: none;">Delete</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state" style="padding: 1rem;">No parts yet.</p>
+  {% endif %}
+
+  <div class="collapsible-header" onclick="toggleCollapsible('part-form')">
+    <h3>➕ Add Part</h3>
+    <span class="collapsible-toggle">▼</span>
+  </div>
+  <div class="collapsible-content" id="part-form">
+    <form method="post" action="{{ url_for('add_part', job_id=job.id) }}">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Machine <span style="color: #a0aec0; font-weight: normal;">(optional)</span></label>
+          <select name="machine_id">
+            <option value="">-- Select Machine --</option>
+            {% for m in machines %}
+              <option value="{{ m.machine_id }}">
+                {% if m.model %}
+                  {{ m.model }}
+                {% else %}
+                  Machine
+                {% endif %}
+                {% if m.serial_number %} - {{ m.serial_number }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-row" style="margin-bottom: 0; position: relative;">
+          <label>Part Number <span style="color: #a0aec0; font-weight: normal; font-size: 0.85rem;">(select from catalog)</span></label>
+          <input type="text" name="part_number" id="part-number-input" placeholder="Search part number..." autocomplete="off" oninput="searchParts(this.value)" required>
+          <input type="hidden" name="part_number_valid" id="part-number-valid" value="0">
+          <div id="part-autocomplete-list" style="display: none; position: absolute; top: 0; left: calc(100% + 0.5rem); width: 300px; max-width: calc(100vw - 2rem); background: white; border: 2px solid #e2e8f0; border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-size: 0.85rem;"></div>
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Description</label>
+          <input type="text" name="description" id="part-description-input" placeholder="Enter description">
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Head</label>
+          <input type="text" name="head" placeholder="Enter head number or 'all'" list="head-options">
+          <datalist id="head-options">
+            <option value="all">
+            <option value="1">
+            <option value="2">
+            <option value="3">
+            <option value="4">
+            <option value="5">
+            <option value="6">
+            <option value="7">
+            <option value="8">
+            <option value="9">
+            <option value="10">
+            <option value="11">
+            <option value="12">
+            <option value="13">
+            <option value="14">
+            <option value="15">
+          </datalist>
+        </div>
+        <div class="form-row" style="margin-bottom: 0;">
+          <label>Quantity</label>
+          <input type="number" step="1" min="1" name="quantity" placeholder="1" value="1">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">➕ Add Part</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function toggleCollapsible(id) {
+  const content = document.getElementById(id);
+  const header = content.previousElementSibling;
+  
+  content.classList.toggle('expanded');
+  header.classList.toggle('expanded');
+}
+
+// Simple form handling - prevent double submission and ensure clean state
+(function() {
+  let formSubmitting = false;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const machineForm = document.getElementById('add-machine-form');
+    if (machineForm) {
+      // Always reset form on page load to ensure clean state
+      machineForm.reset();
+      
+      // Prevent double submission
+      machineForm.addEventListener('submit', function(e) {
+        if (formSubmitting) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+        
+        formSubmitting = true;
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Adding...';
+        }
+        
+        return true;
+      });
+    }
+  });
+})();
+
+let partSearchTimeout = null;
+let validPartNumbers = new Set();
+
+function searchParts(query) {
+  const partNumberInput = document.getElementById('part-number-input');
+  const autocompleteList = document.getElementById('part-autocomplete-list');
+  const partNumberValid = document.getElementById('part-number-valid');
+  
+  if (!partNumberInput || !autocompleteList) return;
+  
+  // Clear previous timeout
+  if (partSearchTimeout) {
+    clearTimeout(partSearchTimeout);
+  }
+  
+  // Hide autocomplete if query is too short
+  if (!query || query.length < 2) {
+    autocompleteList.style.display = 'none';
+    if (partNumberValid) partNumberValid.value = '0';
+    if (partNumberInput) partNumberInput.setCustomValidity('Please select a part from the catalog');
+    return;
+  }
+  
+  // Debounce the search
+  partSearchTimeout = setTimeout(function() {
+    fetch(`/api/parts/search?q=${encodeURIComponent(query)}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data && data.length > 0) {
+          autocompleteList.innerHTML = '';
+          validPartNumbers.clear();
+          
+          data.forEach(function(part) {
+            validPartNumbers.add(part.part_number.toLowerCase());
+            
+            const item = document.createElement('div');
+            item.style.cssText = 'padding: 0.5rem 0.75rem; cursor: pointer; border-bottom: 1px solid #e2e8f0; transition: background 0.2s;';
+            item.innerHTML = `<strong style="color: #1c4283; font-size: 0.9rem;">${escapeHtml(part.part_number)}</strong>${part.description ? '<br><span style="color: #4a5568; font-size: 0.75rem;">' + escapeHtml(part.description) + '</span>' : ''}`;
+            
+            item.addEventListener('mouseenter', function() {
+              this.style.background = '#f7fafc';
+            });
+            item.addEventListener('mouseleave', function() {
+              this.style.background = 'white';
+            });
+            
+            item.addEventListener('click', function() {
+              document.getElementById('part-number-input').value = part.part_number;
+              document.getElementById('part-description-input').value = part.description || '';
+              if (partNumberValid) partNumberValid.value = '1';
+              if (partNumberInput) partNumberInput.setCustomValidity('');
+              autocompleteList.style.display = 'none';
+            });
+            
+            autocompleteList.appendChild(item);
+          });
+          autocompleteList.style.display = 'block';
+          
+          // Check if current value matches any valid part
+          if (validPartNumbers.has(query.toLowerCase())) {
+            if (partNumberValid) partNumberValid.value = '1';
+            if (partNumberInput) partNumberInput.setCustomValidity('');
+          } else {
+            if (partNumberValid) partNumberValid.value = '0';
+            if (partNumberInput) partNumberInput.setCustomValidity('Please select a part from the catalog');
+          }
+        } else {
+          autocompleteList.style.display = 'none';
+          if (partNumberValid) partNumberValid.value = '0';
+          if (partNumberInput) partNumberInput.setCustomValidity('No matching parts found. Please select from the catalog.');
+        }
+      })
+      .catch(error => {
+        console.error('Error searching parts:', error);
+        autocompleteList.style.display = 'none';
+        if (partNumberValid) partNumberValid.value = '0';
+        if (partNumberInput) partNumberInput.setCustomValidity('Error searching parts catalog');
+      });
+  }, 300);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Save scroll position before form submission
+document.addEventListener('DOMContentLoaded', function() {
+  // Hide autocomplete when clicking outside
+  document.addEventListener('click', function(event) {
+    const partNumberInput = document.getElementById('part-number-input');
+    const autocompleteList = document.getElementById('part-autocomplete-list');
+    
+    if (partNumberInput && autocompleteList && 
+        !partNumberInput.contains(event.target) && 
+        !autocompleteList.contains(event.target)) {
+      autocompleteList.style.display = 'none';
+    }
+  });
+  
+  // Validate part number on form submit
+  const partForm = document.querySelector('form[action*="add_part"]');
+  if (partForm) {
+    partForm.addEventListener('submit', function(e) {
+      const partNumberInput = document.getElementById('part-number-input');
+      const partNumberValid = document.getElementById('part-number-valid');
+      
+      if (partNumberInput && partNumberValid) {
+        if (partNumberValid.value === '0' || !validPartNumbers.has(partNumberInput.value.toLowerCase())) {
+          e.preventDefault();
+          alert('Please select a valid part number from the catalog. Random part numbers are not allowed.');
+          partNumberInput.focus();
+          return false;
+        }
+      }
+    });
+  }
+  // Restore scroll position if it was saved
+  const savedScrollPosition = sessionStorage.getItem('jobDetailScrollPosition');
+  if (savedScrollPosition) {
+    // Use setTimeout to ensure page is fully rendered
+    setTimeout(function() {
+      window.scrollTo(0, parseInt(savedScrollPosition));
+      sessionStorage.removeItem('jobDetailScrollPosition');
+    }, 100);
+  }
+  
+  // Save scroll position before any form submission
+  const forms = document.querySelectorAll('form[method="POST"]');
+  forms.forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+      // Get the form's position relative to the page
+      const formRect = form.getBoundingClientRect();
+      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      const formTop = formRect.top + scrollPosition;
+      
+      // Save both the form position and current scroll position
+      sessionStorage.setItem('jobDetailScrollPosition', formTop.toString());
+    });
+  });
+});
+</script>
+{% endblock %}

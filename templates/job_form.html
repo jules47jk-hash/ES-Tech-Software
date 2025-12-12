@@ -1,0 +1,210 @@
+
+{% extends "base.html" %}
+{% block content %}
+<h1>New Job</h1>
+<form method="post">
+  <div class="form-row">
+    <label>Job Number *</label>
+    <input type="text" name="job_number" required placeholder="Enter job number" maxlength="50">
+  </div>
+  <div class="form-row">
+    <label>Job Type</label>
+    <select name="job_type" id="job_type">
+      <option value="">-- Select --</option>
+      <option value="Service">Service</option>
+      <option value="Repair">Repair</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label>Customer Name *</label>
+    <input type="text" name="customer_name" id="customer_name" required autocomplete="off" maxlength="100">
+    <div id="customer-suggestions" style="position: relative;"></div>
+  </div>
+  <div class="form-row">
+    <label>Job Date</label>
+    <input type="date" name="job_date" value="{{ today }}">
+  </div>
+  <div class="form-row" id="location-row">
+    <label>Location</label>
+    <input type="text" name="location" id="location" maxlength="200">
+  </div>
+  <div class="form-row">
+    <label>Job Description</label>
+    <textarea name="description" id="description"></textarea>
+  </div>
+  <div class="form-row">
+    <label>Status</label>
+    <select name="status">
+      <option value="Completed" selected>Completed</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Open">Open</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label>Notes</label>
+    <textarea name="notes"></textarea>
+  </div>
+  <div class="form-row">
+    <label>Hours Charged</label>
+    <input type="number" step="0.5" min="0" name="labour_hours" placeholder="0.0" value="0">
+  </div>
+  <div class="form-row">
+    <label>Travel</label>
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem;">
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+        <input type="radio" name="travel_type" value="under_25km" onclick="toggleTravelInput()">
+        Under 25km
+      </label>
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+        <input type="radio" name="travel_type" value="hours" onclick="toggleTravelInput()">
+        Input Hours Travelled
+      </label>
+      <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: normal;">
+        <input type="radio" name="travel_type" value="calculated_later" onclick="toggleTravelInput()">
+        Calculate Later
+      </label>
+    </div>
+    <input type="hidden" name="travel_under_25km" id="travel_under_25km" value="no">
+    <input type="number" step="0.5" min="0" name="travel_time_hours" id="travel_time_hours" placeholder="0.0" value="0" style="display: none; margin-top: 0.5rem; width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 2px solid #e2e8f0;">
+    <input type="text" name="travel_cost" id="travel_cost_later" placeholder="Enter travel cost details" style="display: none; margin-top: 0.5rem; width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 2px solid #e2e8f0;">
+  </div>
+  <p>
+    <button type="submit" class="btn btn-primary">Save Job</button>
+    <a href="{{ url_for('list_jobs') }}" class="btn">Cancel</a>
+  </p>
+</form>
+
+<script>
+function toggleTravelInput() {
+  const under25 = document.querySelector('input[name="travel_type"][value="under_25km"]');
+  const hours = document.querySelector('input[name="travel_type"][value="hours"]');
+  const calculatedLater = document.querySelector('input[name="travel_type"][value="calculated_later"]');
+  const travelUnder25Input = document.getElementById('travel_under_25km');
+  const travelHoursInput = document.getElementById('travel_time_hours');
+  const travelCostLaterInput = document.getElementById('travel_cost_later');
+  
+  if (under25.checked) {
+    travelUnder25Input.value = 'yes';
+    travelHoursInput.style.display = 'none';
+    travelHoursInput.value = '0';
+    if (travelCostLaterInput) {
+      travelCostLaterInput.style.display = 'none';
+      travelCostLaterInput.value = '';
+    }
+  } else if (hours.checked) {
+    travelUnder25Input.value = 'no';
+    travelHoursInput.style.display = 'block';
+    if (travelCostLaterInput) {
+      travelCostLaterInput.style.display = 'none';
+      travelCostLaterInput.value = '';
+    }
+  } else if (calculatedLater.checked) {
+    travelUnder25Input.value = 'no';
+    travelHoursInput.style.display = 'none';
+    travelHoursInput.value = '0';
+    if (travelCostLaterInput) {
+      travelCostLaterInput.style.display = 'block';
+    }
+  } else {
+    travelUnder25Input.value = 'no';
+    travelHoursInput.style.display = 'none';
+    travelHoursInput.value = '0';
+    if (travelCostLaterInput) {
+      travelCostLaterInput.style.display = 'none';
+      travelCostLaterInput.value = '';
+    }
+  }
+}
+
+// Job type change handler - prefill description for Service
+const jobTypeSelect = document.getElementById('job_type');
+const descriptionTextarea = document.getElementById('description');
+
+jobTypeSelect.addEventListener('change', function() {
+  if (this.value === 'Service' && !descriptionTextarea.value.trim()) {
+    descriptionTextarea.value = 'Extended Warranty Service';
+  }
+});
+
+// Customer autocomplete
+let customerTimeout;
+const customerInput = document.getElementById('customer_name');
+const locationInput = document.getElementById('location');
+const suggestionsDiv = document.getElementById('customer-suggestions');
+
+customerInput.addEventListener('input', function() {
+  const query = this.value.trim();
+  
+  clearTimeout(customerTimeout);
+  
+  // If input is cleared, show location field again
+  if (query.length === 0) {
+    document.getElementById('location-row').style.display = 'block';
+    locationInput.value = '';
+  }
+  
+  if (query.length < 2) {
+    suggestionsDiv.innerHTML = '';
+    return;
+  }
+  
+  customerTimeout = setTimeout(() => {
+    fetch(`/api/customers/search?q=${encodeURIComponent(query)}`)
+      .then(response => response.json())
+      .then(data => {
+        displaySuggestions(data);
+      })
+      .catch(error => console.error('Error:', error));
+  }, 300);
+});
+
+function displaySuggestions(customers) {
+  if (customers.length === 0) {
+    suggestionsDiv.innerHTML = '';
+    return;
+  }
+  
+  const ul = document.createElement('ul');
+  ul.style.cssText = 'position: absolute; background: white; border: 2px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); list-style: none; margin: 0; padding: 0; z-index: 1000; max-height: 200px; overflow-y: auto; width: 100%; margin-top: 4px;';
+  
+  customers.forEach(customer => {
+    const li = document.createElement('li');
+    li.style.cssText = 'padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid #e2e8f0; transition: background-color 0.2s;';
+    li.innerHTML = `<strong>${customer.name}</strong>${customer.location ? '<br><span style="color: #718096; font-size: 0.85rem;">' + customer.location + '</span>' : ''}`;
+    
+    li.addEventListener('mouseenter', function() {
+      this.style.backgroundColor = '#f7fafc';
+    });
+    li.addEventListener('mouseleave', function() {
+      this.style.backgroundColor = 'white';
+    });
+    
+    li.addEventListener('click', function() {
+      customerInput.value = customer.name;
+      if (customer.location) {
+        locationInput.value = customer.location;
+        // Hide location field if customer already has a location
+        document.getElementById('location-row').style.display = 'none';
+      } else {
+        locationInput.value = '';
+        // Show location field if customer doesn't have a location
+        document.getElementById('location-row').style.display = 'block';
+      }
+      suggestionsDiv.innerHTML = '';
+    });
+    
+    ul.appendChild(li);
+  });
+  
+  suggestionsDiv.innerHTML = '';
+  suggestionsDiv.appendChild(ul);
+}
+
+// Close suggestions when clicking outside
+document.addEventListener('click', function(event) {
+  if (!customerInput.contains(event.target) && !suggestionsDiv.contains(event.target)) {
+    suggestionsDiv.innerHTML = '';
+  }
+});
+</script>
+{% endblock %}

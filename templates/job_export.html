@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Job – {{ job.customer_name }}</title>
+  <style>
+    body { 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; 
+      margin: 20px; 
+      font-size: 14px;
+      max-width: 800px;
+      margin: 20px auto;
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 10px; 
+      margin-bottom: 15px;
+    }
+    th, td { 
+      border: 1px solid #333; 
+      padding: 6px 8px; 
+      vertical-align: top;
+      text-align: left;
+    }        
+    th { 
+      background: #f0f0f0; 
+      font-weight: 600;
+    }
+    .section { 
+      margin-bottom: 20px;
+    }
+    .meta { 
+      margin-bottom: 15px;
+    }
+    .meta div { 
+      margin-bottom: 4px;
+    }
+    @media print { 
+      button, a, form, .no-print { display: none; } 
+    }
+    .btn { 
+      display: inline-block; 
+      padding: 8px 12px; 
+      font-size: 14px; 
+      border-radius: 6px; 
+      border: 1px solid #ccc; 
+      background: #e2e8f0; 
+      cursor: pointer; 
+      text-decoration: none; 
+      color: #222;
+      margin-right: 10px;
+    }
+    .btn-primary { 
+      background: #8bb3df; 
+      border-color: #8bb3df; 
+      color: white; 
+    }
+    .header-section { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 20px; 
+      padding-bottom: 15px; 
+      border-bottom: 2px solid #333;
+    }  
+    .header-section img { 
+      height: 50px; 
+      width: auto;
+    }
+    .print-date { 
+      font-size: 12px; 
+      color: #666;
+    }
+    h1 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+<div class="no-print" style="margin-bottom: 15px;">
+  <button onclick="window.print()" class="btn btn-primary">Print / Save as PDF</button>
+  <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn">Back to Job</a>
+</div>
+
+<div class="header-section">
+  <img src="{{ url_for('static', filename='logo.png') }}" alt="Embroidery Source Logo">
+  <div class="print-date">
+    <strong>Date Printed:</strong> {{ print_date }}
+  </div>
+</div>
+
+<h1>Job – {{ job.customer_name }}</h1>
+
+<div class="meta">
+  <div><strong>Job Number:</strong> {{ job.job_number or job.id }}</div>
+  <div><strong>Job Type:</strong> {{ job.job_type or '—' }}</div>
+  <div><strong>Date:</strong> {{ job.job_date|aus_date if job.job_date else '—' }}</div>
+  <div><strong>Status:</strong> {{ job.status or '—' }}</div>
+  <div><strong>Location:</strong> {{ job.location or '—' }}</div>
+  <div><strong>Hours Charged:</strong> {{ job.labour_hours or 0 }}</div>
+</div>
+
+<div class="section">
+  <h2>Travel</h2>
+  {% if travel_under_25 %}
+    <div><strong>Travel Type:</strong> Under 25km</div>
+  {% elif travel_time_hours and travel_time_hours > 0 %}
+    <div><strong>Travel Type:</strong> Input Hours Travelled</div>
+    <div><strong>Travel Time:</strong> {{ travel_time_hours }} hrs</div>
+  {% else %}
+    <div><strong>Travel Type:</strong> Calculate Later</div>
+  {% endif %}
+  {% if job.travel_cost is not none and job.travel_cost != '' %}
+    <div><strong>Travel Cost:</strong> {{ job.travel_cost }}</div>
+  {% endif %}
+</div>
+
+{% if job.description %}
+<div class="section">
+  <h2>Job Description</h2>
+  <p style="white-space: pre-wrap; margin: 0;">{{ job.description }}</p>
+</div>
+{% endif %}
+
+{% if contacts %}
+<div class="section">
+  <h2>Contacts</h2>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Phone</th><th>Email</th><th>Role</th></tr>
+    </thead>
+    <tbody>
+    {% for c in contacts %}
+      <tr>
+        <td>{{ c.name or '—' }}</td>
+        <td>{{ c.phone or '—' }}</td>
+        <td>{{ c.email or '—' }}</td>
+        <td>{{ c.role or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if machines %}
+<div class="section">
+  <h2>Machines</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th>
+        <th>Serial</th>
+        <th>Reported Fault</th>
+        <th>Service Notes</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for m in machines %}
+      <tr>
+        <td>{{ m.model or '—' }}</td>
+        <td>{{ m.serial_number or '—' }}</td>
+        <td>
+          {% if m.reported_fault %}
+            <div style="white-space: pre-wrap;">{{ m.reported_fault }}</div>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if m.service_notes %}
+            <div style="white-space: pre-wrap;">{{ m.service_notes }}</div>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ m.status or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if parts %}
+<div class="section">
+  <h2>Parts Used</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Quantity</th>
+        <th>Part #</th>
+        <th>Description</th>
+        <th>Machine</th>
+        <th>Head</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for p in parts %}
+      <tr>
+        <td>{{ p.quantity|int if p.quantity else '—' }}</td>
+        <td>{{ p.part_number or '—' }}</td>
+        <td>{{ p.description or '—' }}</td>
+        <td>
+          {% if p.machine_id %}
+            {% set ns = namespace(found=false) %}
+            {% for m in customer_machines %}
+              {% if m.id == p.machine_id and not ns.found %}
+                {% set ns.found = true %}
+                {{ m.model or 'Machine' }}{% if m.serial_number %} ({{ m.serial_number }}){% endif %}
+              {% endif %}
+            {% endfor %}
+            {% if not ns.found %}
+              —
+            {% endif %}
+          {% elif p.machine_serial %}
+            {{ p.machine_serial }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>{{ p.head or '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if job.notes %}
+<div class="section">
+  <h2>Notes</h2>
+  <p style="white-space: pre-wrap; margin: 0;">{{ job.notes }}</p>
+</div>
+{% endif %}
+
+</body>
+</html>
+
