@@ -53,3 +53,4 @@ bash ~/embroidery_service_webapp/update.sh
 
 This doesn't require execute permissions.
 
+

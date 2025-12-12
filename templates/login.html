@@ -117,6 +117,31 @@
       color: #084298;
       border: 2px solid #b6d4fe;
     }
+    .test-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+    }
+    .test-section p {
+      font-size: 0.8rem;
+      color: #718096;
+      margin-bottom: 0.75rem;
+    }
+    .btn-test {
+      background: #f7fafc;
+      color: #4a5568;
+      border: 1px solid #e2e8f0;
+      font-size: 0.875rem;
+      padding: 0.5rem 1rem;
+      width: auto;
+      display: inline-block;
+    }
+    .btn-test:hover {
+      background: #edf2f7;
+      transform: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
@@ -135,7 +160,7 @@
       {% endif %}
     {% endwith %}
 
-    <form method="post">
+    <form method="post" id="loginForm">
       <div class="form-group">
         <label for="username">Username</label>
         <input type="text" id="username" name="username" required autofocus autocomplete="username">
@@ -146,7 +171,21 @@
       </div>
       <button type="submit" class="btn btn-primary">Log In</button>
     </form>
+
+    <div class="test-section">
+      <p>Quick Test Login</p>
+      <button type="button" class="btn btn-test" onclick="fillTestCredentials()">Fill Test Credentials</button>
+    </div>
   </div>
+
+  <script>
+    function fillTestCredentials() {
+      document.getElementById('username').value = 'Fairfield';
+      document.getElementById('password').value = 'ES2025';
+      // Optional: Auto-submit after filling
+      // document.getElementById('loginForm').submit();
+    }
+  </script>
 </body>
 </html>
 

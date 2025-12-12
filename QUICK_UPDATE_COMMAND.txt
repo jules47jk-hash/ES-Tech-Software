@@ -1,0 +1,4 @@
+# Copy and paste this ENTIRE command into PythonAnywhere Bash:
+
+cd ~/embroidery_service_webapp && [ -f service.db ] && cp service.db service.db.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true && git fetch origin main && git pull origin main && pip3.10 install --user -r requirements.txt && echo "✅ Update complete! Now go to Web tab and click Reload."
+
