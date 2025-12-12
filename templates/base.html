@@ -360,6 +360,11 @@
   </style>
 </head>
 <body>
+{% if version_info %}
+<div style="background: #1c4283; color: white; padding: 0.5rem 1rem; text-align: center; font-size: 0.75rem; font-family: monospace; border-bottom: 2px solid #8bb3df;">
+  <strong>Version:</strong> {{ version_info.hash }} | <strong>Deployed:</strong> {{ version_info.date }}
+</div>
+{% endif %}
 <header>
   <div class="logo-container">
     <a href="{{ url_for('list_jobs') }}">

@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime
 import os
+import subprocess
 
 app = Flask(__name__)
 app.secret_key = "change_this_secret_key"  # for flash messages
@@ -269,6 +270,39 @@ def init_db():
 
 # Initialize database on startup
 init_db()
+
+
+def get_git_version():
+    """Get git commit hash and date for version display"""
+    try:
+        # Get commit hash (short version)
+        commit_hash = subprocess.check_output(
+            ['git', 'rev-parse', '--short', 'HEAD'],
+            cwd=os.path.dirname(__file__),
+            stderr=subprocess.DEVNULL
+        ).decode('utf-8').strip()
+        
+        # Get commit date
+        commit_date = subprocess.check_output(
+            ['git', 'log', '-1', '--format=%cd', '--date=format:%Y-%m-%d %H:%M:%S'],
+            cwd=os.path.dirname(__file__),
+            stderr=subprocess.DEVNULL
+        ).decode('utf-8').strip()
+        
+        return {
+            'hash': commit_hash,
+            'date': commit_date
+        }
+    except:
+        # If git is not available or not a git repo, return None
+        return None
+
+
+@app.context_processor
+def inject_version():
+    """Make version info available to all templates"""
+    version_info = get_git_version()
+    return dict(version_info=version_info)
 
 
 @app.route("/login", methods=["GET", "POST"])
