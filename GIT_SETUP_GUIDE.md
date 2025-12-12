@@ -72,8 +72,8 @@ git commit -m "Initial commit"
 
 ### Step 3: Get Repository URL
 After creating, GitHub will show you commands. Copy the repository URL:
-- It will look like: `https://github.com/yourusername/embroidery-service-webapp.git`
-- Or: `git@github.com:yourusername/embroidery-service-webapp.git`
+- Your repository URL: `https://github.com/jules47jk-hash/ES-Tech-Software.git`
+- Or SSH: `git@github.com:jules47jk-hash/ES-Tech-Software.git`
 
 ---
 
@@ -83,9 +83,8 @@ After creating, GitHub will show you commands. Copy the repository URL:
 In PowerShell (in your project folder):
 ```powershell
 cd C:\Users\Julian\embroidery_service_webapp
-git remote add origin https://github.com/yourusername/embroidery-service-webapp.git
+git remote add origin https://github.com/jules47jk-hash/ES-Tech-Software.git
 ```
-(Replace `yourusername` and repository name with your actual GitHub details)
 
 ### Step 2: Push to GitHub
 ```powershell
@@ -124,14 +123,13 @@ When you run `git push`, use:
 In PythonAnywhere Bash console:
 ```bash
 cd ~
-git clone https://github.com/yourusername/embroidery-service-webapp.git embroidery_service_webapp
+git clone https://github.com/jules47jk-hash/ES-Tech-Software.git embroidery_service_webapp
 ```
-(Replace with your actual GitHub URL)
 
 **Note:** If the folder already exists, you can:
 ```bash
 cd ~/embroidery_service_webapp
-git remote add origin https://github.com/yourusername/embroidery-service-webapp.git
+git remote add origin https://github.com/jules47jk-hash/ES-Tech-Software.git
 git branch -M main
 git pull origin main --allow-unrelated-histories
 ```

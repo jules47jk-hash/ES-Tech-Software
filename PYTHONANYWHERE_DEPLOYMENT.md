@@ -26,13 +26,13 @@
 
 **Option B: Using Git (Recommended)**
 
-1. Push your code to GitHub/GitLab
+1. Push your code to GitHub
 2. Open **"Consoles"** tab → **"Bash"**
 3. Run:
    ```bash
    cd ~
-   git clone https://github.com/yourusername/your-repo-name.git
-   cd your-repo-name
+   git clone https://github.com/jules47jk-hash/ES-Tech-Software.git embroidery_service_webapp
+   cd embroidery_service_webapp
    ```
 
 ---

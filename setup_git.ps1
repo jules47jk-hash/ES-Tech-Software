@@ -52,7 +52,7 @@ git status --short
 Write-Host ""
 Write-Host "=== Next Steps ===" -ForegroundColor Green
 Write-Host "1. Create a repository on GitHub (https://github.com)" -ForegroundColor Yellow
-Write-Host "2. Add remote: git remote add origin https://github.com/yourusername/repo-name.git" -ForegroundColor Yellow
+Write-Host "2. Add remote: git remote add origin https://github.com/jules47jk-hash/ES-Tech-Software.git" -ForegroundColor Yellow
 Write-Host "3. First commit: git add ." -ForegroundColor Yellow
 Write-Host "4. Commit: git commit -m `"Initial commit`"" -ForegroundColor Yellow
 Write-Host "5. Push: git push -u origin main" -ForegroundColor Yellow

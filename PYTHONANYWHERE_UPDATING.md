@@ -87,11 +87,11 @@ Visit: `https://jules47jk.pythonanywhere.com`
 ## Using Git (Recommended for Larger Updates)
 
 ### Initial Setup (One-time)
-1. Push your code to GitHub/GitLab
+1. Push your code to GitHub
 2. In PythonAnywhere Bash:
    ```bash
    cd ~
-   git clone https://github.com/yourusername/your-repo.git embroidery_service_webapp
+   git clone https://github.com/jules47jk-hash/ES-Tech-Software.git embroidery_service_webapp
    ```
 
 ### Updating via Git
