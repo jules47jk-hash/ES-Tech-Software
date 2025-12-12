@@ -1,34 +1,11 @@
 
 import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from datetime import datetime
 import os
 
 app = Flask(__name__)
 app.secret_key = "change_this_secret_key"  # for flash messages
-
-# Set up Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-login_manager.login_message = 'Please log in to access this page.'
-login_manager.login_message_category = 'info'
-
-# User class for Flask-Login
-class User(UserMixin):
-    def __init__(self, id):
-        self.id = id
-
-# Hardcoded credentials (can be moved to environment variables or database)
-VALID_USERNAME = "Fairfield"
-VALID_PASSWORD = "ES2025"
-
-@login_manager.user_loader
-def load_user(user_id):
-    if user_id == VALID_USERNAME:
-        return User(user_id)
-    return None
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "service.db")
 
@@ -271,37 +248,12 @@ def init_db():
 init_db()
 
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "").strip()
-        
-        if username == VALID_USERNAME and password == VALID_PASSWORD:
-            user = User(username)
-            login_user(user)
-            flash("Login successful!", "success")
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for("list_jobs"))
-        else:
-            flash("Invalid username or password.", "danger")
-    
-    return render_template("login.html")
-
-@app.route("/logout")
-@login_required
-def logout():
-    logout_user()
-    flash("You have been logged out.", "info")
-    return redirect(url_for("login"))
-
 @app.route("/")
 def index():
     return redirect(url_for("list_jobs"))
 
 
 @app.route("/jobs")
-@login_required
 def list_jobs():
     search_query = request.args.get("search", "").strip()
     conn = get_db()
@@ -322,7 +274,6 @@ def list_jobs():
 
 
 @app.route("/jobs/<int:job_id>/delete", methods=["POST"])
-@login_required
 def delete_job(job_id):
     conn = get_db()
     cur = conn.cursor()
@@ -352,7 +303,6 @@ def delete_job(job_id):
 
 
 @app.route("/jobs/new", methods=["GET", "POST"])
-@login_required
 def new_job():
     if request.method == "POST":
         job_number = request.form.get("job_number")
@@ -423,7 +373,6 @@ def new_job():
 
 
 @app.route("/jobs/<int:job_id>")
-@login_required
 def job_detail(job_id):
     conn = get_db()
     cur = conn.cursor()
@@ -489,7 +438,6 @@ def job_detail(job_id):
 
 
 @app.route("/jobs/<int:job_id>/update_field", methods=["POST"])
-@login_required
 def update_job_field(job_id):
     field = request.form.get("field")
     value = request.form.get("value")
@@ -561,7 +509,6 @@ def update_job_field(job_id):
 
 
 @app.route("/jobs/<int:job_id>/update_travel", methods=["POST"])
-@login_required
 def update_travel(job_id):
     """Update travel information for a job"""
     travel_type = request.form.get("travel_type")
@@ -604,7 +551,6 @@ def update_travel(job_id):
 
 
 @app.route("/jobs/<int:job_id>/add_contact", methods=["POST"])
-@login_required
 def add_contact(job_id):
     name = request.form.get("name")
     phone = request.form.get("phone")
@@ -634,7 +580,6 @@ def add_contact(job_id):
 
 
 @app.route("/jobs/<int:job_id>/add_machine", methods=["POST"])
-@login_required
 def add_machine(job_id):
     # Get form values directly from request - no caching, no defaults
     # Use .get() which returns None if key doesn't exist, then handle empty strings
@@ -745,7 +690,6 @@ def add_machine(job_id):
 
 
 @app.route("/jobs/<int:job_id>/add_part", methods=["POST"])
-@login_required
 def add_part(job_id):
     machine_id = request.form.get("machine_id")
     part_number = request.form.get("part_number")
@@ -808,7 +752,6 @@ def add_part(job_id):
 
 
 @app.route("/contacts/<int:contact_id>/edit", methods=["GET", "POST"])
-@login_required
 def edit_contact(contact_id):
     conn = get_db()
     cur = conn.cursor()
@@ -845,7 +788,6 @@ def edit_contact(contact_id):
 
 
 @app.route("/contacts/<int:contact_id>/delete", methods=["POST"])
-@login_required
 def delete_contact(contact_id):
     conn = get_db()
     cur = conn.cursor()
@@ -865,7 +807,6 @@ def delete_contact(contact_id):
 
 
 @app.route("/job_machines/<int:job_machine_id>/edit", methods=["GET", "POST"])
-@login_required
 def edit_machine(job_machine_id):
     conn = get_db()
     cur = conn.cursor()
@@ -925,7 +866,6 @@ def edit_machine(job_machine_id):
 
 
 @app.route("/job_machines/<int:job_machine_id>/delete", methods=["POST"])
-@login_required
 def delete_machine(job_machine_id):
     conn = get_db()
     cur = conn.cursor()
@@ -946,7 +886,6 @@ def delete_machine(job_machine_id):
 
 
 @app.route("/parts/<int:part_id>/edit", methods=["GET", "POST"])
-@login_required
 def edit_part(part_id):
     conn = get_db()
     cur = conn.cursor()
@@ -1020,7 +959,6 @@ def edit_part(part_id):
 
 
 @app.route("/parts/<int:part_id>/delete", methods=["POST"])
-@login_required
 def delete_part(part_id):
     conn = get_db()
     cur = conn.cursor()
@@ -1040,7 +978,6 @@ def delete_part(part_id):
 
 
 @app.route("/machines/search")
-@login_required
 def search_machines():
     query = request.args.get("q", "").strip()
     
@@ -1078,7 +1015,6 @@ def search_machines():
 
 
 @app.route("/machines/<int:machine_id>/edit", methods=["GET", "POST"])
-@login_required
 def edit_machine_base(machine_id):
     """Edit a machine's base information (model, serial number, customer)"""
     conn = get_db()
@@ -1129,7 +1065,6 @@ def edit_machine_base(machine_id):
 
 
 @app.route("/machines/<int:machine_id>/delete", methods=["POST"])
-@login_required
 def delete_machine_base(machine_id):
     """Delete a machine (only if it has no job associations)"""
     conn = get_db()
@@ -1161,7 +1096,6 @@ def delete_machine_base(machine_id):
 
 
 @app.route("/machines/<serial_number>/jobs")
-@login_required
 def machine_jobs(serial_number):
     conn = get_db()
     cur = conn.cursor()
@@ -1203,7 +1137,6 @@ def machine_jobs(serial_number):
 
 
 @app.route("/customers")
-@login_required
 def list_customers():
     search_query = request.args.get("search", "").strip()
     conn = get_db()
@@ -1264,7 +1197,6 @@ def list_customers():
 
 
 @app.route("/customers/<customer_name>/jobs")
-@login_required
 def customer_jobs(customer_name):
     conn = get_db()
     cur = conn.cursor()
@@ -1299,7 +1231,6 @@ def customer_jobs(customer_name):
 
 
 @app.route("/api/customers/search")
-@login_required
 def search_customers():
     """API endpoint for customer autocomplete"""
     query = request.args.get("q", "").strip().lower()
@@ -1336,7 +1267,6 @@ def search_customers():
 
 
 @app.route("/api/parts/search")
-@login_required
 def search_parts():
     """API endpoint to search for parts by part number from the parts catalog"""
     query = request.args.get("q", "").strip()
@@ -1371,7 +1301,6 @@ def search_parts():
 
 
 @app.route("/api/machines/list")
-@login_required
 def list_machines_api():
     """API endpoint to get all existing machines"""
     conn = get_db()
@@ -1404,7 +1333,6 @@ def list_machines_api():
 
 
 @app.route("/jobs/<int:job_id>/export")
-@login_required
 def export_job(job_id):
     conn = get_db()
     cur = conn.cursor()
